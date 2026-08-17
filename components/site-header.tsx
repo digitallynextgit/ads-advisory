@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -71,20 +72,26 @@ export default function SiteHeader() {
         style={{ transitionTimingFunction: "var(--ease-out-expo)" }}
       >
         <div className="mx-auto flex w-full max-w-[1800px] items-center justify-between px-5 sm:px-6 lg:px-10">
+          {/*
+            The supplied lockup already reads "THE ADS ADVISORS", so it replaces
+            both the old drawn mark and the typeset name - keeping either would
+            print the firm's name twice. It stands alone: no descriptor tag.
+          */}
           <Link
             href="/"
-            className="group flex items-center gap-3 py-5"
+            className="group flex items-center py-4"
             aria-label="The ADS Advisors, home"
           >
-            <Mark />
-            <span className="flex flex-col leading-none">
-              <span className="font-display text-[1.05rem] tracking-tight text-fg">
-                The ADS Advisors
-              </span>
-              <span className="mt-1 text-[0.58rem] font-semibold tracking-[0.28em] text-dim uppercase">
-                India&nbsp;&middot;&nbsp;Japan
-              </span>
-            </span>
+            <Image
+              src="/logo-white.webp"
+              alt="The ADS Advisors"
+              width={600}
+              height={355}
+              priority
+              // Height unchanged; width set ~8% past the natural aspect, so the
+              // lockup reads a touch wider without growing the header row.
+              className="h-9 w-[66px] sm:h-10 sm:w-[73px]"
+            />
           </Link>
 
           <nav className="hidden items-center gap-9 lg:flex" aria-label="Primary">
@@ -202,30 +209,5 @@ export default function SiteHeader() {
         </div>
       </div>
     </>
-  );
-}
-
-/** Monogram: two arcs meeting, the bridge motif, over the hinomaru dot. */
-function Mark() {
-  return (
-    <span className="relative flex h-10 w-10 flex-none items-center justify-center">
-      <svg viewBox="0 0 40 40" className="h-10 w-10" aria-hidden>
-        <circle cx="20" cy="20" r="19" fill="none" stroke="var(--color-line)" />
-        <path
-          d="M9 25c0-7 4.9-12 11-12s11 5 11 12"
-          fill="none"
-          stroke="url(#markGradient)"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-        <circle cx="20" cy="25" r="3.1" fill="var(--color-vermilion)" />
-        <defs>
-          <linearGradient id="markGradient" x1="9" y1="13" x2="31" y2="25">
-            <stop stopColor="var(--color-saffron)" />
-            <stop offset="1" stopColor="var(--color-vermilion)" />
-          </linearGradient>
-        </defs>
-      </svg>
-    </span>
   );
 }

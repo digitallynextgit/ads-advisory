@@ -75,43 +75,32 @@ function Hero() {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center opacity-[0.62]"
+            className="object-cover object-center opacity-[0.9]"
           />
         </div>
 
-        {/* Veils: hold the headline column in near-black so the copy stays
-            legible, while the delegations remain readable to the right. */}
-        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/75 to-ink/20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/35 to-ink/60" />
+        {/*
+          Veils. Only two jobs: keep the left column dark enough for the headline
+          and hold the very bottom for the lead and CTAs. Everywhere else the
+          photographs are left alone - the right-hand stop is fully transparent
+          and the vertical veil clears by a third of the way up.
+        */}
+        <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/45 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/10 to-transparent" />
       </div>
 
       <div className="relative mx-auto flex min-h-0 w-full max-w-[1800px] flex-1 flex-col px-5 sm:px-6 lg:px-10">
         {/*
-          The decorative block is the only flexible item in the column: it grows
-          to centre itself in whatever space is spare and, being `min-h-0` +
-          `overflow-hidden`, it is also the thing that gives when space runs out.
-          Paired with `shrink-0` on the copy below, that makes the headline and
-          CTAs structurally impossible to push off-screen at any viewport size.
+          Empty on purpose. The outlined INDIA / JAPAN wordmarks that sat here
+          were removed, but this spacer stays: it is the only flexible item in
+          the column, so it absorbs the free space that holds the copy against
+          the bottom of the hero, and being `min-h-0` + `overflow-hidden` it is
+          also what gives when space runs out. Paired with `shrink-0` on the copy
+          below, that is what keeps the headline and CTAs on screen at every
+          viewport size. Deleting it would push the copy to the top and break the
+          100vh fit.
         */}
-        <div
-          aria-hidden
-          className="pointer-events-none flex min-h-0 flex-1 flex-col items-end justify-center overflow-hidden"
-        >
-          <span
-            data-reveal="fade"
-            style={delay(200)}
-            className="outline-hero text-[clamp(1.75rem,min(8vw,8.6vh),7rem)]"
-          >
-            INDIA
-          </span>
-          <span
-            data-reveal="fade"
-            style={delay(360)}
-            className="outline-hero outline-hero--accent text-[clamp(1.75rem,min(8vw,8.6vh),7rem)]"
-          >
-            JAPAN
-          </span>
-        </div>
+        <div aria-hidden className="pointer-events-none min-h-0 flex-1 overflow-hidden" />
 
         <div className="shrink-0 pt-[clamp(1.5rem,4vh,3.5rem)]">
           <Reveal variant="fade">

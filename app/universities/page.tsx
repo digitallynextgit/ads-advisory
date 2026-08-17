@@ -187,11 +187,20 @@ function HowToParticipate() {
           title="Five steps from interest to the room."
         />
 
-        <ol className="relative mt-16 max-w-3xl">
-          {/* Spine */}
+        {/*
+          Laid out across the width rather than down a 768px column, which left
+          most of an 1800px shell empty. Five abreast on `lg` also reads as the
+          process it describes; two-up on `sm`, stacked below that.
+        */}
+        <ol className="relative mt-16 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-5 lg:gap-x-7">
+          {/*
+            Connector, only on the single-row layout. It sits on the vertical
+            centre of the numbered nodes (top-4 = half of the h-8 node) and the
+            nodes, being opaque, punch through it.
+          */}
           <div
             aria-hidden
-            className="absolute top-3 bottom-3 left-[15px] w-px bg-gradient-to-b from-saffron/50 via-line to-transparent"
+            className="absolute inset-x-0 top-4 hidden h-px bg-gradient-to-r from-saffron/45 via-line to-transparent lg:block"
           />
 
           {universities.steps.map((step, i) => (
@@ -199,16 +208,16 @@ function HowToParticipate() {
               key={step.title}
               data-reveal="up"
               style={delay(i * 110)}
-              className="group relative pb-12 pl-14 last:pb-0"
+              className="group relative"
             >
               <span
                 aria-hidden
-                className="absolute top-0 left-0 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-ink text-[0.68rem] font-semibold text-saffron transition-colors duration-500 group-hover:border-saffron"
+                className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-ink text-[0.68rem] font-semibold text-saffron transition-colors duration-500 group-hover:border-saffron"
               >
                 {i + 1}
               </span>
 
-              <h3 className="text-xl leading-snug text-fg sm:text-2xl">{step.title}</h3>
+              <h3 className="mt-6 text-xl leading-snug text-fg">{step.title}</h3>
               <p className="mt-3 text-[0.95rem] leading-relaxed text-muted">{step.body}</p>
             </li>
           ))}
