@@ -1,0 +1,718 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   THE ADS ADVISORS: Design System
+   Palette "Indigo & Vermilion": Japanese indigo (kon) meets Indian saffron.
+   The two national palettes overlap almost exactly at saffron to vermilion, so
+   the accent ramp doubles as the brand's India-Japan bridge.
+   ========================================================================== */
+
+@theme {
+  /* Ink: the diplomatic navy base */
+  --color-ink: #070b14;
+  --color-ink-raised: #0b1220;
+  --color-ink-card: #101a2c;
+  --color-ink-deep: #04070d;
+  --color-line: #1c2942;
+  --color-line-soft: #142034;
+
+  /* Foreground on ink */
+  --color-fg: #ede7dc;
+  --color-muted: #97a3b8;
+  --color-dim: #6c7a93;
+
+  /* Accent ramp: saffron to vermilion */
+  --color-saffron: #f0a63c;
+  --color-vermilion: #e14b2a;
+  --color-brass: #c8a951;
+
+  /* Washi paper: the light counterpoint */
+  --color-paper: #f6f1e7;
+  --color-paper-2: #ebe3d4;
+  --color-paper-line: #d9cfba;
+  --color-paper-ink: #101a2c;
+  --color-paper-muted: #5c6577;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* next/font variables must be inlined so the utilities resolve */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+/* Vertical-space variants. The hero is height-constrained, not width-constrained,
+   so it needs to respond to how short the viewport is, not how narrow. */
+@custom-variant short (@media (max-height: 720px));
+@custom-variant squat (@media (max-height: 600px));
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: var(--color-vermilion);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-saffron);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Scrollbars hidden by request. Scrolling itself is untouched (wheel, touch,
+     keyboard and scrollbar-drag all still work) - only the visual track is
+     removed. The gradient progress bar under the header remains as the position
+     cue, since hiding the scrollbar removes the usual one. */
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Outline characters: the signature display treatment
+   ========================================================================== */
+
+@utility outline-type {
+  color: transparent;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: currentColor;
+  paint-order: stroke fill;
+}
+
+.outline-hero {
+  color: transparent;
+  /* 28%, not 22%: the hero now sits over brand artwork rather than flat ink,
+     and the thinner stroke lost legibility against the lit structure. */
+  -webkit-text-stroke: 1.5px color-mix(in srgb, var(--color-fg) 28%, transparent);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.82;
+  user-select: none;
+  /* letter-spacing is also applied after the final glyph, so its ink lands
+     outside the content box and an overflow-hidden parent shears it off.
+     This pads the box back out past the tracking plus the stroke width. */
+  padding-right: 0.08em;
+}
+
+.outline-hero--accent {
+  -webkit-text-stroke-color: color-mix(in srgb, var(--color-saffron) 55%, transparent);
+}
+
+/* Scrolling band: needs more weight than the hero to read while in motion */
+.outline-band {
+  color: transparent;
+  -webkit-text-stroke: 1.5px color-mix(in srgb, var(--color-fg) 36%, transparent);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  user-select: none;
+}
+
+/* ==========================================================================
+   Ghost words: oversized outlined text drawn behind section headings.
+   Rendered by <GhostWord> as SVG <text> so the stroke can be dashed - the
+   draw-on is a stroke-dashoffset animation, glyph by glyph.
+   ========================================================================== */
+
+/* The band is only the scroll trigger. It must NOT fade: the default
+   [data-reveal] opacity ramp washed the whole word in, which is the opposite of
+   a drawing effect. Full opacity throughout; the glyphs supply all the motion. */
+.ghost-band[data-reveal] {
+  opacity: 1;
+  transform: none;
+  transition: none;
+  /* Own compositor layer + paint containment: the dash animation repaints on
+     the main thread every frame, and without this the invalidation spilled
+     into the section behind it (heading, copy, cards) and stuttered. Confining
+     the repaint to the band is what makes the draw smooth. */
+  will-change: transform;
+  contain: paint;
+}
+
+.ghost-svg {
+  /* Stroke colour lives on the <svg> so the paper variant is a one-line swap.
+     11% of the foreground: visible as texture, sitting quietly under the copy.
+     (6% could barely be seen; 24% competed with the heading; 15% was close but
+     still a touch strong.) This is the one number to change if it should be
+     stronger or softer - keep the rgba fallback below in step with it. */
+  --ghost-stroke: color-mix(in srgb, var(--color-fg) 11%, transparent);
+  user-select: none;
+  pointer-events: none;
+}
+
+.ghost-svg--paper {
+  --ghost-stroke: color-mix(in srgb, var(--color-paper-ink) 9%, transparent);
+}
+
+.ghost-svg--paper .ghost-text {
+  stroke: rgba(16, 26, 44, 0.09);
+  stroke: var(--ghost-stroke);
+}
+
+.ghost-text {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  fill: none;
+  /* Literal first: without color-mix() support the var() would resolve to an
+     invalid value and stroke would fall back to none. */
+  stroke: rgba(237, 231, 220, 0.11);
+  stroke: var(--ghost-stroke);
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* One glyph. SVG applies the dash pattern to each glyph outline independently,
+   so with the pattern set to [10em dash, 10em gap] and the offset parked at
+   10em, every outline sits entirely inside a gap - invisible. Sliding the
+   offset to 0 uncovers the outline from its start point along its length, i.e.
+   the letter draws itself. em units follow the inherited vw font size, so the
+   pace is the same at every viewport width; 10em exceeds the perimeter of the
+   heaviest glyph in the set (W, M), so nothing shows early. */
+.ghost-glyph {
+  /* --dash is set per glyph by <GhostWord> (its perimeter x a safety margin);
+     10em is only the fallback for a glyph without a value. Both properties
+     start equal, so each outline is parked entirely inside a dash gap. */
+  stroke-dasharray: var(--dash, 10em);
+  stroke-dashoffset: var(--dash, 10em);
+  /* Linear on purpose. Only the first ~2/3 of the travel is ever visible, so an
+     eased curve gave a slow start and then a snap; constant speed reads as an
+     even pen stroke. 2.25s of travel puts visual completion at ~1.5s per
+     letter with a short invisible tail, instead of transitions that ran for
+     up to 8s and kept the band repainting after the word was finished. */
+  transition-property: stroke-dashoffset;
+  transition-duration: 2.25s;
+  transition-timing-function: linear;
+  /* Safari has not always inherited dominant-baseline from <text> into its
+     tspans; stating it on the glyph itself is a no-op elsewhere. */
+  dominant-baseline: central;
+}
+
+[data-shown="true"] .ghost-glyph {
+  stroke-dashoffset: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost-glyph {
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+/* ==========================================================================
+   Timeline spine progress: the connecting line fills as the list scrolls past.
+   <ScrollFx> writes --progress (0..1) onto [data-progress-track]; everything
+   here is pure CSS off that one number.
+   ========================================================================== */
+
+.timeline-progress {
+  /* scaleY, not height: a transform is composited, so the line repaints on the
+     GPU every frame instead of forcing layout on each scroll tick. */
+  transform: scaleY(var(--progress, 0));
+  transform-origin: top center;
+  will-change: transform;
+}
+
+/* The lit cap sits at the leading edge. Percentage top resolves against the
+   spine, so it needs no pixel maths and tracks any list length. */
+.timeline-progress-cap {
+  top: calc(var(--progress, 0) * 100%);
+  margin-top: -3.5px;
+  opacity: var(--progress, 0);
+  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--color-saffron) 55%, transparent);
+  will-change: top;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No scroll-linked motion: show the rail already complete. */
+  [data-progress-track] {
+    --progress: 1;
+  }
+
+  .timeline-progress-cap {
+    display: none;
+  }
+}
+
+/* Outlined section index numerals: 01 / 02 / 03 */
+.outline-index {
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--color-saffron) 65%, transparent);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  transition: -webkit-text-stroke-color 0.5s var(--ease-out-expo);
+}
+
+.group:hover .outline-index {
+  -webkit-text-stroke-color: var(--color-saffron);
+}
+
+.outline-index--paper {
+  -webkit-text-stroke-color: color-mix(in srgb, var(--color-vermilion) 60%, transparent);
+}
+
+/* ==========================================================================
+   Scroll reveal: driven by <ScrollFx /> toggling [data-shown]
+   Pages stay Server Components; only the observer is client-side.
+   ========================================================================== */
+
+[data-reveal] {
+  opacity: 0;
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    transform 1.1s var(--ease-out-expo),
+    clip-path 1.1s var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+[data-reveal="up"] {
+  transform: translate3d(0, 34px, 0);
+}
+[data-reveal="fade"] {
+  transform: none;
+}
+[data-reveal="left"] {
+  transform: translate3d(-40px, 0, 0);
+}
+[data-reveal="right"] {
+  transform: translate3d(40px, 0, 0);
+}
+[data-reveal="scale"] {
+  transform: scale(1.06);
+}
+[data-reveal="mask"] {
+  clip-path: inset(0 0 100% 0);
+  transform: translate3d(0, 18px, 0);
+}
+[data-reveal="wipe"] {
+  clip-path: inset(0 100% 0 0);
+}
+
+[data-reveal][data-shown="true"] {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 0 0);
+}
+
+/* Line-by-line headline reveal.
+   The mask clips its own overflow so a line can slide up from beneath it, which
+   also means it clips the glyph ink that sits outside the line box: this serif's
+   ascenders were being shaved by 3-4px at display sizes. Padding on BOTH axes
+   (bottom only, previously) gives the ink room, and the matching negative
+   margins keep the element's layout box exactly where it was. */
+.line-mask {
+  display: block;
+  overflow: hidden;
+  padding-top: 0.18em;
+  margin-top: -0.18em;
+  padding-bottom: 0.18em;
+  margin-bottom: -0.18em;
+}
+.line-mask > span {
+  display: block;
+  transform: translate3d(0, 105%, 0);
+  transition: transform 1.15s var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-shown="true"] .line-mask > span,
+.line-mask[data-shown="true"] > span {
+  transform: none;
+}
+
+/* ==========================================================================
+   Motion keyframes
+   ========================================================================== */
+
+@keyframes marquee-x {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes orb-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(4%, -6%, 0) scale(1.08);
+  }
+  66% {
+    transform: translate3d(-5%, 4%, 0) scale(0.96);
+  }
+}
+
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulse-seal {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+
+@keyframes shine-sweep {
+  from {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  to {
+    transform: translateX(320%) skewX(-18deg);
+  }
+}
+
+.animate-marquee {
+  animation: marquee-x var(--marquee-duration, 42s) linear infinite;
+}
+.animate-orb {
+  animation: orb-drift 26s ease-in-out infinite;
+}
+.animate-page-in {
+  animation: page-in 0.8s var(--ease-out-expo) both;
+}
+.animate-seal {
+  animation: pulse-seal 2.8s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   Components
+
+   These live in @layer components on purpose: unlayered rules outrank every
+   Tailwind utility, so an unlayered `.btn { display: inline-flex }` would beat
+   `hidden lg:inline-flex` and leak the desktop CTA onto mobile. Inside the
+   layer, utilities win as expected.
+   ========================================================================== */
+
+@layer components {
+
+/* Eyebrow label with the hinomaru seal dot */
+/*
+  Deliberately `inline`, not `inline-flex`. As a flex container the label became
+  a flex item that absorbed all remaining width whenever it wrapped, stranding
+  the dot against the far edge and — under `align-items: center` — floating it in
+  the gutter between the two lines. Flowing the dot as ordinary inline content
+  keeps it glued to the start of the first line and lets the block centre or
+  left-align as a whole, at any width.
+*/
+.eyebrow {
+  display: inline;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--color-vermilion);
+  margin-right: 0.6rem;
+  /* Lifts the dot off the baseline onto the cap-height centre. */
+  vertical-align: 0.1em;
+}
+
+/* Primary action */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.9rem 1.6rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    filter 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease,
+    background-color 0.35s ease;
+}
+
+/* No lift on hover: translating the button upward clipped it against the
+   overflow-hidden edges it sits near. No coloured drop-shadow either - it read
+   as the gradient bleeding out past the pill's edge. The sweep and a small
+   brightness shift carry the hover state, so the shape stays crisply defined. */
+
+.btn-primary {
+  background-image: linear-gradient(102deg, var(--color-saffron), var(--color-vermilion));
+  color: #180b04;
+}
+.btn-primary:hover {
+  filter: brightness(1.07);
+}
+
+/* Light sweep across the primary button */
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  transform: translateX(-120%) skewX(-18deg);
+  z-index: -1;
+}
+.btn-primary:hover::after {
+  animation: shine-sweep 0.9s var(--ease-out-expo);
+}
+
+.btn-ghost {
+  border: 1px solid color-mix(in srgb, var(--color-fg) 22%, transparent);
+  color: var(--color-fg);
+}
+.btn-ghost:hover {
+  border-color: var(--color-saffron);
+  color: var(--color-saffron);
+}
+
+.btn-ghost-dark {
+  border: 1px solid color-mix(in srgb, var(--color-paper-ink) 25%, transparent);
+  color: var(--color-paper-ink);
+}
+.btn-ghost-dark:hover {
+  border-color: var(--color-vermilion);
+  color: var(--color-vermilion);
+}
+
+/* Arrow that slides on hover */
+.btn .arrow,
+.link-arrow .arrow {
+  transition: transform 0.45s var(--ease-out-expo);
+}
+.btn:hover .arrow,
+.link-arrow:hover .arrow {
+  transform: translateX(5px);
+}
+
+/* Underline-on-hover text link */
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  position: relative;
+}
+.link-arrow::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  height: 1px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.link-arrow:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Card with a travelling top hairline on hover */
+.card-lift {
+  position: relative;
+  transition:
+    transform 0.6s var(--ease-out-expo),
+    background-color 0.6s ease,
+    border-color 0.6s ease;
+}
+.card-lift::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(90deg, var(--color-saffron), var(--color-vermilion));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.7s var(--ease-out-expo);
+}
+.card-lift:hover {
+  transform: translateY(-6px);
+}
+.card-lift:hover::before {
+  transform: scaleX(1);
+}
+
+/* Photo frame: warm veil that clears on hover */
+.photo-frame {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-ink-card);
+}
+.photo-frame img {
+  transition: transform 1.2s var(--ease-out-expo), filter 0.8s ease;
+}
+.photo-frame:hover img {
+  transform: scale(1.05);
+}
+.photo-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 35%, color-mix(in srgb, var(--color-ink) 88%, transparent) 100%);
+  pointer-events: none;
+}
+
+/* Hairline grid rules that frame the content column */
+.rule-x {
+  border-top: 1px solid color-mix(in srgb, var(--color-line) 80%, transparent);
+}
+
+/* Film grain overlay */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Form fields */
+.field {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-fg) 18%, transparent);
+  padding: 0.85rem 0;
+  font-size: 0.95rem;
+  color: var(--color-fg);
+  transition: border-color 0.4s ease;
+}
+.field::placeholder {
+  color: var(--color-dim);
+}
+.field:focus {
+  outline: none;
+  border-bottom-color: var(--color-saffron);
+}
+.field:focus-visible {
+  outline: none;
+}
+.field option {
+  background: var(--color-ink-card);
+  color: var(--color-fg);
+}
+.field[aria-invalid="true"] {
+  border-bottom-color: var(--color-vermilion);
+}
+
+} /* @layer components */
+
+/* ==========================================================================
+   Accessibility
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+
+  .line-mask > span {
+    transform: none !important;
+  }
+}
